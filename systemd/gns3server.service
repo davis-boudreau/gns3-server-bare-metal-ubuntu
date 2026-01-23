@@ -1,0 +1,17 @@
+[Unit]
+Description=GNS3 Server
+After=network-online.target docker.service libvirtd.service
+Requires=docker.service libvirtd.service
+
+[Service]
+Type=simple
+User=gns3
+Group=gns3
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/usr/bin/gns3server
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
