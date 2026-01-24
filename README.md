@@ -1,102 +1,61 @@
-# GNS3 Bare‑Metal Server Kit (Ubuntu 24.04)
+# GNS3 Bare-Metal Server Kit
 
-A reproducible, **scripted** install for a bare‑metal GNS3 Server host with Docker + KVM + a Linux bridge + persistent TAP interfaces.
+**Ubuntu 24.04 LTS**
 
-This kit is designed for **learning labs** and predictable rebuilds.
+A structured, reproducible **bare-metal deployment framework** for building a fully functional GNS3 Server host on Ubuntu 24.04.
 
-## Supported OS
-
-- ✅ **Ubuntu Server 24.04 LTS** (primary / tested)
-- ⚠️ Debian is *not* supported for the full stack **yet** (GNS3 PPA is Ubuntu‑only). Docker install is compatible with Debian, but scripts **01/03/04** assume Ubuntu defaults (Netplan + PPA). See `docs/architecture.md`.
-
-## ⚠️ Safety & Security Notes (Read First)
-
-- **Networking changes can drop SSH**. Steps 01 and 04 rewrite Netplan and may interrupt connectivity.
-  - Prefer running from a **local console / iDRAC / IPMI**.
-  - The scripts create timestamped backups for rollback.
-- SSH **password authentication** can be enabled for labs. Disable for production.
-- A Linux bridge exposes L2 connectivity to TAP interfaces — treat the host like an edge device.
-
-See `docs/security-notes.md` for recommended hardening steps.
+This repository is designed as an **infrastructure runbook**, not a collection of ad-hoc scripts.
 
 ---
 
-## Install Instructions — Execution Order (Do Not Deviate)
+## 🚀 What This Project Does
 
-| Step | Script                          | Must Run As | Reboot After |
-|------|---------------------------------|------------|--------------|
-| 01   | `scripts/01-prepare-gns3-host.sh`    | root       | ✅ YES        |
-| 02   | `scripts/02-install-docker.sh`       | root       | ✅ YES        |
-| 03   | `scripts/03-install-gns3-server.sh`  | root       | ✅ YES        |
-| 04   | `scripts/04-bridge-tap-provision.sh` | root       | ✅ YES        |
-| 05   | Connect from GNS3 GUI                | user `gns3`| —            |
+This kit installs and configures a complete GNS3 server environment including:
 
-> **Note:** If the bridge exists before Docker + GNS3 → you will hit permission and Cloud‑node failures.
+* Static IPv4 networking (Netplan)
+* KVM / libvirt virtualization baseline
+* Docker Engine (official repository)
+* GNS3 Server (Ubuntu PPA)
+* Linux bridge (`br0`)
+* Persistent TAP interfaces (`tap0`, `tap1`)
+* Systemd-managed services
+* Structured logging and verification
+
+The end result is a **stable, repeatable, classroom-ready GNS3 bare-metal host**.
 
 ---
 
-## Conceptual Dependency Graph
+## 🎯 Intended Audience
 
-```text
-Ubuntu OS
-   │
-   ├── Time / NTP
-   ├── SSH
-   ├── KVM / Kernel
-   │
-Docker Runtime
-   │
-GNS3 Server
-   │
-Linux Bridge (br0)
-   │
-TAP Interfaces (tap0, tap1)
-   │
-GNS3 Complete Installation
+This project is intended for:
+
+* networking and cybersecurity students
+* instructors deploying lab infrastructure
+* administrators building reusable teaching platforms
+* offline or USB-based deployments
+* environments requiring repeatability and auditability
+
+The scripts are intentionally verbose and instructional.
+
+---
+
+## 🧩 Supported Platform
+
+| Component      | Support                 |
+| -------------- | ----------------------- |
+| OS             | Ubuntu Server 24.04 LTS |
+| Deployment     | Bare metal              |
+| Virtualization | KVM                     |
+| GNS3 Mode      | Remote server           |
+| Install Media  | USB or local copy       |
+
+> ⚠️ Debian is **not currently supported** for GNS3 installation due to Ubuntu-specific PPA requirements.
+
+---
+
+## 📁 Repository Structure
+
 ```
-
-> **Bridge + TAP is the LAST physical abstraction layer**  
-> It must sit *above* Docker + GNS3, not beside them.
-
----
-
-## Execution Flow (Safe Instructions)
-
-```bash
-# Step 1 – OS preparation
-sudo bash scripts/01-prepare-gns3-host.sh
-sudo reboot
-
-# Step 2 – Docker
-sudo bash scripts/02-install-docker.sh
-sudo reboot
-
-# Step 3 – GNS3 Server
-sudo bash scripts/03-install-gns3-server.sh
-sudo reboot
-
-# Step 4 – Bridge + TAP
-sudo bash scripts/04-bridge-tap-provision.sh
-sudo reboot
-```
-
----
-
-## Optional: Expand Root Filesystem (Ubuntu LVM Default Only)
-
-If you installed Ubuntu with default LVM and your root LV is small (common on some installs), you can run:
-
-```bash
-sudo bash scripts/05-expand-root-lvm-ubuntu.sh
-```
-
-This script **only** operates on Ubuntu’s default LV path and safely exits if it is not present.
-
----
-
-## Files / Layout
-
-```text
 gns3-bare-metal-kit/
 ├─ scripts/
 │  ├─ 01-prepare-gns3-host.sh
@@ -108,29 +67,77 @@ gns3-bare-metal-kit/
 │  ├─ 07-verify-host.sh
 │  └─ lib/
 │     └─ common.sh
-├─ systemd/
-│  ├─ gns3server.service
-│  └─ gns3-taps.service
-└─ docs/
-   ├─ install.md
-   ├─ architecture.md
-   ├─ troubleshooting.md
-   └─ security-notes.md
+│
+├─ docs/
+│  ├─ install.md
+│  ├─ troubleshooting.md
+│  └─ architecture.md
+│
+├─ CHANGELOG.md
+├─ LICENSE
+└─ README.md
 ```
 
 ---
+
+## 🧭 Installation Overview
+
+Installation follows a **strict, ordered workflow**.
+
+The process begins with **Step 00**, where all files are copied from USB to the local filesystem to ensure availability across reboots.
+
+> ❗ Scripts must **never** be executed directly from removable media.
+
+The full, authoritative installation guide is located here:
+
+👉 **[`docs/install.md`](docs/install.md)**
+
+This guide covers:
+
+* USB deployment workflow (Step 00)
+* exact execution order
+* reboot requirements
+* storage expansion
+* logging and dry-run mode
+* host readiness verification
+
 ---
 
-## Logging
+## 🧠 Installation Model
 
-All scripts automatically log to:
+```
+USB Media
+   ↓
+Local Home Directory (installer user)
+   ↓
+System Preparation (network, users, KVM)
+   ↓
+Docker Runtime
+   ↓
+GNS3 Server
+   ↓
+Linux Bridge (br0)
+   ↓
+TAP Interfaces (tap0 / tap1)
+   ↓
+Verified Host Readiness
+```
 
-- **Directory:** `/var/log/gns3-bare-metal/`
-- **Files:** `<scriptname>-YYYY-MM-DD_HH-MM-SS.log`
+---
 
-Logs mirror to the console and are written to disk for troubleshooting and student submissions.
+## 📝 Logging
 
-To collect logs for support/submission:
+All scripts automatically log execution output.
+
+**Log location:**
+
+```
+/var/log/gns3-bare-metal/
+```
+
+Each script execution creates a timestamped log file and mirrors output to the console.
+
+A helper script is provided to package logs:
 
 ```bash
 sudo bash scripts/06-collect-logs.sh
@@ -138,40 +145,90 @@ sudo bash scripts/06-collect-logs.sh
 
 ---
 
-## Dry-run (advanced)
+## 🧪 Dry-Run Mode (Advanced)
 
-All scripts support dry-run mode to preview actions **without executing mutating commands**:
+Every script supports a dry-run mode that prints intended actions without modifying the system.
+
+Example:
 
 ```bash
-sudo bash scripts/01-prepare-gns3-host.sh --dry-run
+sudo bash scripts/02-install-docker.sh --dry-run
 ```
 
-Notes:
-- Dry-run prints commands and prompts.
-- Package installs, file writes, service changes, and network changes are skipped.
+Dry-run mode is useful for:
+
+* reviewing changes before execution
+* classroom demonstrations
+* validation and troubleshooting
 
 ---
 
-## Verify host readiness
+## ✅ Host Readiness Verification
 
-Run a non-mutating readiness check (KVM, Docker, GNS3, bridge, TAPs) and produce a single report:
+After installation, system health can be validated using:
 
 ```bash
 sudo bash scripts/07-verify-host.sh
 ```
 
+This performs **non-mutating checks** including:
+
+* KVM acceleration
+* Docker service
+* GNS3 server service
+* ubridge permissions
+* Linux bridge integrity
+* TAP interface persistence
+
 Exit codes:
-- `0` = READY
-- `1` = NOT READY
 
+| Code | Meaning   |
+| ---- | --------- |
+| `0`  | READY     |
+| `1`  | NOT READY |
 
-## License
+---
 
-MIT — see `LICENSE`.
+## 🧱 Design Philosophy
 
-## References
+This project prioritizes:
 
-- Docker Engine install docs (Ubuntu / Debian).  
-- GNS3 Linux installation docs.
+* explicit execution order
+* safe defaults
+* idempotent operations where possible
+* auditability through logging
+* reproducibility across semesters
+* clarity over cleverness
 
-(Links are included in `docs/install.md`.)
+The goal is to behave like a **real infrastructure deployment runbook**.
+
+---
+
+## 📜 License
+
+MIT License
+Copyright © 2026 Davis Boudreau
+
+---
+
+## 🤝 Contributing
+
+This project is intended primarily for instructional use.
+
+Contributions are welcome if they:
+
+* maintain clarity and structure
+* preserve step ordering
+* do not obscure learning objectives
+* improve reliability or documentation
+
+---
+
+## ⭐ Final Note
+
+This repository exists to make bare-metal GNS3 deployments:
+
+* predictable
+* teachable
+* repeatable
+* supportable
