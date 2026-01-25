@@ -4,6 +4,7 @@
 # Script:      07-verify-host.sh
 # Version:     1.0.2
 # Author:      Davis Boudreau
+# Email:       davis.boudreau@nscc.ca
 # License:     MIT
 # SPDX-License-Identifier: MIT
 #
