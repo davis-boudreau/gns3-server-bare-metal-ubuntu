@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 #==============================================================================
-# Common helpers for the GNS3 Bare-Metal Server Kit
+# Project:     GNS3 Bare-Metal Server Kit (Ubuntu 24.04)
+# Script:      01-prepare-gns3-host.sh
+# Version:     1.0.0
+# Author:      Davis Boudreau
+# Email:       davis.boudreau@nscc.ca
+# License:     MIT
+# SPDX-License-Identifier: MIT
+#
+# Summary: Common helpers for the GNS3 Bare-Metal Server Kit
 #==============================================================================
 
 set -euo pipefail
