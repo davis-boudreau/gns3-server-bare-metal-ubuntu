@@ -4,6 +4,7 @@
 # Script:      05-expand-root-lvm-ubuntu.sh
 # Version:     1.0.0
 # Author:      Davis Boudreau
+# Email:       davis.boudreau@nscc.ca
 # License:     MIT
 # SPDX-License-Identifier: MIT
 #

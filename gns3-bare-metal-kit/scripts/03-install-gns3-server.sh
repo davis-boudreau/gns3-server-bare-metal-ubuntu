@@ -4,6 +4,7 @@
 # Script:      03-install-gns3-server.sh
 # Version:     1.0.0
 # Author:      Davis Boudreau
+# Email:       davis.boudreau@nscc.ca
 # License:     MIT
 # SPDX-License-Identifier: MIT
 #

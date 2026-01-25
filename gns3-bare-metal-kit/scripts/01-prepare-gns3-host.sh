@@ -4,6 +4,7 @@
 # Script:      01-prepare-gns3-host.sh
 # Version:     1.0.0
 # Author:      Davis Boudreau
+# Email:       davis.boudreau@nscc.ca
 # License:     MIT
 # SPDX-License-Identifier: MIT
 #

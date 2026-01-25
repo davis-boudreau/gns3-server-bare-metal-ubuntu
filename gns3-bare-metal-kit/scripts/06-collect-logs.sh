@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
-# Collect logs for support / student submissions
+#==============================================================================
+# Project:     GNS3 Bare-Metal Server Kit (Ubuntu 24.04)
+# Script:      06-collect-logs.sh
+# Version:     1.0.0
+# Author:      Davis Boudreau
+# Email:       davis.boudreau@nscc.ca
+# License:     MIT
+# SPDX-License-Identifier: MIT
+#
+# Summary:
+#   - Collect logs for support / student submissions
+# ==============================================================================
 set -euo pipefail
 
 LOG_DIR="${LOG_DIR:-/var/log/gns3-bare-metal}"
