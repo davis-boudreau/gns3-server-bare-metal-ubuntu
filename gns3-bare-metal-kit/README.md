@@ -1,4 +1,4 @@
-# GNS3 Bare‑Metal Server Kit (Ubuntu 24.04)
+# GNS3 Bare‑Metal Server Kit (Ubuntu 24.04) — v1.0.5
 
 A reproducible, **scripted** install for a bare‑metal GNS3 Server host with Docker + KVM + a Linux bridge + persistent TAP interfaces.
 
@@ -8,6 +8,15 @@ This kit is designed for **learning labs** and predictable rebuilds.
 
 - ✅ **Ubuntu Server 24.04 LTS** (primary / tested)
 - ⚠️ Debian is *not* supported for the full stack **yet** (GNS3 PPA is Ubuntu‑only). Docker install is compatible with Debian, but scripts **01/03/04** assume Ubuntu defaults (Netplan + PPA). See `docs/architecture.md`.
+
+## What v1.0.5 adds
+
+- Deterministic **libvirt default NAT network** provisioning (virbr0) to support predictable student NAT/cloud labs:
+  - `192.168.100.1/26` with DHCP `192.168.100.33–62`
+- Optional, permanent **VLSM host routes** via the “project router” at `192.168.100.2` (virbr0), so routed topologies are easier for students.
+- `07-verify-host.sh` now reports on libvirt NAT + VLSM routes in addition to KVM/Docker/GNS3/bridge/TAPs.
+
+---
 
 ## ⚠️ Safety & Security Notes (Read First)
 
@@ -23,13 +32,17 @@ See `docs/security-notes.md` for recommended hardening steps.
 
 ## Install Instructions — Execution Order (Do Not Deviate)
 
-| Step | Script                          | Must Run As | Reboot After |
-|------|---------------------------------|------------|--------------|
-| 01   | `scripts/01-prepare-gns3-host.sh`    | root       | ✅ YES        |
-| 02   | `scripts/02-install-docker.sh`       | root       | ✅ YES        |
-| 03   | `scripts/03-install-gns3-server.sh`  | root       | ✅ YES        |
-| 04   | `scripts/04-bridge-tap-provision.sh` | root       | ✅ YES        |
-| 05   | Connect from GNS3 GUI                | user `gns3`| —            |
+| Step | Script                                        | Must Run As        | Reboot After |
+|------|-----------------------------------------------|--------------------|--------------|
+| 01   | `scripts/01-prepare-gns3-host.sh`              | `root`             | ✅ YES        |
+| 02   | `scripts/02-install-docker.sh`                 | `root`             | ✅ YES        |
+| 03   | `scripts/03-install-gns3-server.sh`            | `root`             | ✅ YES        |
+| 04   | `scripts/04-bridge-tap-provision.sh`           | `root`             | ✅ YES        |
+| 05   | `scripts/05-expand-root-lvm-ubuntu.sh`         | `root` (Ubuntu LVM)| —            |
+| 06   | `scripts/08-configure-libvirt-default-nat.sh`  | `root`             | —            |
+| 07   | `scripts/09-enable-vlsm-routes.sh`             | `root`             | —            |
+| 08   | `scripts/07-verify-host.sh`                    | `root`             | —            |
+| 09   | Connect from GNS3 GUI                          | logged-in user     | —            |
 
 > **Note:** If the bridge exists before Docker + GNS3 → you will hit permission and Cloud‑node failures.
 
@@ -46,7 +59,7 @@ Ubuntu OS
    │
 Docker Runtime
    │
-GNS3 Server
+GNS3 Server + libvirt
    │
 Linux Bridge (br0)
    │
@@ -78,19 +91,21 @@ sudo reboot
 # Step 4 – Bridge + TAP
 sudo bash scripts/04-bridge-tap-provision.sh
 sudo reboot
-```
 
----
-
-## Optional: Expand Root Filesystem (Ubuntu LVM Default Only)
-
-If you installed Ubuntu with default LVM and your root LV is small (common on some installs), you can run:
-
-```bash
+# Step 5 – Optional: expand Ubuntu root LV (only if needed)
 sudo bash scripts/05-expand-root-lvm-ubuntu.sh
+
+# Step 6 – Configure libvirt default NAT (virbr0) to 192.168.100.1/26
+sudo bash scripts/08-configure-libvirt-default-nat.sh
+
+# Step 7 – Optional: enable permanent VLSM routes via 192.168.100.2
+sudo bash scripts/09-enable-vlsm-routes.sh
+
+# Step 8 – Verify host readiness (non-mutating report)
+sudo bash scripts/07-verify-host.sh
 ```
 
-This script **only** operates on Ubuntu’s default LV path and safely exits if it is not present.
+For full details, see `docs/install.md`.
 
 ---
 
@@ -106,11 +121,14 @@ gns3-bare-metal-kit/
 │  ├─ 05-expand-root-lvm-ubuntu.sh
 │  ├─ 06-collect-logs.sh
 │  ├─ 07-verify-host.sh
+│  ├─ 08-configure-libvirt-default-nat.sh
+│  ├─ 09-enable-vlsm-routes.sh
 │  └─ lib/
 │     └─ common.sh
 ├─ systemd/
 │  ├─ gns3server.service
-│  └─ gns3-taps.service
+│  ├─ gns3-taps.service
+│  └─ gns3-vlsm-routes.service
 └─ docs/
    ├─ install.md
    ├─ architecture.md
@@ -118,7 +136,6 @@ gns3-bare-metal-kit/
    └─ security-notes.md
 ```
 
----
 ---
 
 ## Logging
@@ -152,26 +169,6 @@ Notes:
 
 ---
 
-## Verify host readiness
-
-Run a non-mutating readiness check (KVM, Docker, GNS3, bridge, TAPs) and produce a single report:
-
-```bash
-sudo bash scripts/07-verify-host.sh
-```
-
-Exit codes:
-- `0` = READY
-- `1` = NOT READY
-
-
 ## License
 
 MIT — see `LICENSE`.
-
-## References
-
-- Docker Engine install docs (Ubuntu / Debian).  
-- GNS3 Linux installation docs.
-
-(Links are included in `docs/install.md`.)

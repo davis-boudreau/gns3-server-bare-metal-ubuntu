@@ -2,7 +2,7 @@
 #==============================================================================
 # Project:     GNS3 Bare-Metal Server Kit (Ubuntu 24.04)
 # Script:      07-verify-host.sh
-# Version:     1.0.2
+# Version:     1.0.3
 # Author:      Davis Boudreau
 # License:     MIT
 # SPDX-License-Identifier: MIT
@@ -185,6 +185,61 @@ if systemctl is-active --quiet gns3-taps 2>/dev/null; then
 else
   fail "gns3-taps service is NOT active"
   systemctl status gns3-taps --no-pager || true
+fi
+
+
+section "Libvirt NAT (default / virbr0)"
+if have virsh; then
+  if virsh net-info default >/dev/null 2>&1; then
+    ok "libvirt network exists: default"
+    XML="$(virsh net-dumpxml default 2>/dev/null || true)"
+    if echo "${XML}" | grep -q "bridge name='virbr0'"; then
+      ok "bridge is virbr0"
+    else
+      warn "bridge is not virbr0 (check libvirt default network)"
+    fi
+    if echo "${XML}" | grep -q "ip address='192.168.100.1'"; then
+      ok "default NAT gateway is 192.168.100.1"
+    else
+      warn "default NAT gateway is not 192.168.100.1 (run scripts/08-configure-libvirt-default-nat.sh)"
+    fi
+    if echo "${XML}" | grep -q "netmask='255.255.255.192'"; then
+      ok "default NAT netmask is 255.255.255.192 (/26)"
+    else
+      warn "default NAT netmask is not /26"
+    fi
+    if echo "${XML}" | grep -q "range start='192.168.100.33'" && echo "${XML}" | grep -q "end='192.168.100.62'"; then
+      ok "DHCP range is 192.168.100.33-192.168.100.62"
+    else
+      warn "DHCP range is not the expected /26 pool"
+    fi
+  else
+    warn "libvirt network 'default' not found (is libvirt installed?)"
+  fi
+else
+  warn "virsh not found (skipping libvirt checks)"
+fi
+
+section "VLSM Host Routes (via 192.168.100.2)"
+ROUTES_OK=0
+ROUTES_TOTAL=6
+check_route() {
+  local cidr="$1"
+  if ip route show "${cidr}" 2>/dev/null | grep -q "via 192.168.100.2 dev virbr0"; then
+    ok "route present: ${cidr} via 192.168.100.2"
+    ROUTES_OK=$((ROUTES_OK+1))
+  else
+    warn "route missing: ${cidr} via 192.168.100.2 (run scripts/09-enable-vlsm-routes.sh)"
+  fi
+}
+check_route 192.168.100.64/27
+check_route 192.168.100.96/27
+check_route 192.168.100.128/27
+check_route 192.168.100.160/27
+check_route 192.168.100.192/27
+check_route 192.168.100.224/27
+if [[ "${ROUTES_OK}" -eq "${ROUTES_TOTAL}" ]]; then
+  ok "all VLSM routes present"
 fi
 
 section "Summary"

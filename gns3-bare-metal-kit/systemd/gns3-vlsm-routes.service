@@ -1,0 +1,19 @@
+[Unit]
+Description=GNS3 VLSM routes via project router 192.168.100.2 (virbr0)
+After=network-online.target libvirtd.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# Idempotent: "replace" ensures routes are present without duplication.
+ExecStart=/usr/sbin/ip route replace 192.168.100.64/27  via 192.168.100.2 dev virbr0
+ExecStart=/usr/sbin/ip route replace 192.168.100.96/27  via 192.168.100.2 dev virbr0
+ExecStart=/usr/sbin/ip route replace 192.168.100.128/27 via 192.168.100.2 dev virbr0
+ExecStart=/usr/sbin/ip route replace 192.168.100.160/27 via 192.168.100.2 dev virbr0
+ExecStart=/usr/sbin/ip route replace 192.168.100.192/27 via 192.168.100.2 dev virbr0
+ExecStart=/usr/sbin/ip route replace 192.168.100.224/27 via 192.168.100.2 dev virbr0
+
+[Install]
+WantedBy=multi-user.target

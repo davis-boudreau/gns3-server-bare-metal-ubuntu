@@ -1,3 +1,9 @@
+## [1.0.5] - 2026-02-01
+### Added
+- Script 08 to pre-provision libvirt default NAT network (virbr0) to 192.168.100.1/26 with a fixed DHCP pool (192.168.100.33–62)
+- Script 09 + systemd unit to install permanent VLSM host routes via the project router at 192.168.100.2 (virbr0)
+- 07-verify-host now reports libvirt NAT settings + VLSM route readiness
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
